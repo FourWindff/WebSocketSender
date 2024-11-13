@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>WebSocket 示例</title>
+  <style>
+      body {
+          font-family: Arial, sans-serif;
+          padding: 20px;
+      }
+
+      #messages {
+          border: 1px solid #ccc;
+          padding: 10px;
+          margin-bottom: 20px;
+          height: 200px;
+          overflow-y: auto;
+      }
+
+      #messageInput {
+          width: 60%;
+          padding: 10px;
+      }
+
+      button {
+          padding: 10px;
+          margin-left: 10px;
+      }
+
+      select {
+          padding: 5px;
+      }
+  </style>
+</head>
+<body>
+
+<h1>WebSocket 示例</h1>
+
+<div>
+  <label for="sourceUserId">选择源用户 ID: </label>
+  <select id="sourceUserId">
+    <option value="1">1</option>
+    <option value="2">2</option>
+    <option value="3">3</option>
+    <option value="4">4</option>
+  </select>
+</div>
+
+<div>
+  <label for="targetUserId">选择目标用户 ID: </label>
+  <select id="targetUserId">
+    <option value="1">1</option>
+    <option value="2">2</option>
+    <option value="3">3</option>
+    <option value="4">4</option>
+  </select>
+</div>
+
+<div id="messages"></div>
+
+<input type="text" id="messageInput" placeholder="输入消息..." />
+<button onclick="sendMessage()">发送</button>
+<button onclick="init()">init</button>
+
+<script>
+  // 创建 WebSocket 连接，假设本地服务器运行在 ws://localhost:3001/ws
+  const socket = new WebSocket("ws://localhost:3001/ws");
+
+  // 获取 DOM 元素
+  const messagesDiv = document.getElementById("messages");
+  const messageInput = document.getElementById("messageInput");
+  const sourceUserIdSelect = document.getElementById("sourceUserId");
+  const targetUserIdSelect = document.getElementById("targetUserId");
+
+  // 监听 WebSocket 打开事件
+  socket.onopen = function () {
+    console.log("WebSocket 连接已打开");
+  };
+
+  // 监听 WebSocket 消息事件
+  socket.onmessage = function (event) {
+    // 将接收到的消息显示在页面上
+    const message = event.data;
+    const messageElement = document.createElement("p");
+    messageElement.textContent = "收到消息: " + message;
+    messagesDiv.appendChild(messageElement);
+  };
+
+  // 监听 WebSocket 错误事件
+  socket.onerror = function (error) {
+    console.error("WebSocket 错误:", error);
+  };
+
+  // 监听 WebSocket 关闭事件
+  socket.onclose = function () {
+    console.log("WebSocket 连接已关闭");
+  };
+
+  // 初始化消息
+  function init(){
+    const data = {
+      type: 'init',
+      sourceUserId: sourceUserIdSelect.value,
+      targetUserId: null,
+      password: "123456",
+      data: null,
+    };
+    socket.send(JSON.stringify(data));
+    const messageElement = document.createElement("p");
+    messageElement.textContent = "登录消息: " + JSON.stringify(data);
+    messagesDiv.appendChild(messageElement);
+  }
+
+  // 发送消息函数
+  function sendMessage() {
+    const message = messageInput.value;
+
+    if (message) {
+      const data = {
+        type: 'chat',
+        sourceUserId: sourceUserIdSelect.value,
+        targetUserId: targetUserIdSelect.value,
+        data: message,
+      };
+      // 发送消息到 WebSocket 服务器
+      socket.send(JSON.stringify(data));
+      const messageElement = document.createElement("p");
+      messageElement.textContent = "发送消息: " + JSON.stringify(data);
+      messagesDiv.appendChild(messageElement);
+      // 清空输入框
+      messageInput.value = '';
+    } else {
+      alert("请输入消息!");
+    }
+  }
+</script>
+
+</body>
+</html>
